@@ -15,6 +15,7 @@
 	<description>API to create new associates in USD</description>
 	<properties>
 		<java.version>16</java.version>
+		<start-class>br.com.sicredi.usdassociatesync.UsdAssociateSyncApplication</start-class>
 	</properties>
 	<dependencies>
 
@@ -38,6 +39,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.teradata.jdbc</groupId>
+			<artifactId>terajdbc4</artifactId>
+			<version>17.10.00.12</version>
 		</dependency>
 	</dependencies>
 

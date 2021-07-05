@@ -31,24 +31,24 @@ public class Controller {
         List<Associate> associatesToCreate = teradata.getNewAssociates(thresholdDate);
 
         for (Associate associate : associatesToCreate) {
-            UsdAssociate usdAssociate = createUsdAssociate(associate);
-            usdAssociate.save();
+                        
+            if(!usd.checkIfAssociateExists(associate)){
+
+                Entity entity = getEntity(usdEntities, associate.getEntity());
+
+                UsdAssociate usdAssociate = new UsdAssociate(associate.getFullName(), 
+                            associate.getBorndate(), 
+                            associate.getCpfCnpj(), 
+                            associate.getAccount(), 
+                            entity);
+                
+                usdAssociate.save();
+            }
         }
     
         return htmlBody;
     }
 
-    private UsdAssociate createUsdAssociate(Associate associateToCreate){
-        
-        Entity entity = getEntity(usdEntities, associateToCreate.getEntity());
-
-        UsdAssociate usdAssociate = new UsdAssociate(associateToCreate.getFullName(), 
-                    associateToCreate.getBorndate(), 
-                    associateToCreate.getCpfCnpj(), 
-                    associateToCreate.getAccount(), 
-                    entity);
-        return usdAssociate;
-    }
 
     private Entity getEntity(List<Entity> entities, String entityCode){
         Entity entity = null;
@@ -65,6 +65,23 @@ public class Controller {
             + "<td>" + entity.getName() + "</td></tr>";
         }
         htmlBody = htmlBody + "</table>";
+        return htmlBody;
+    }
+
+    @GetMapping("showCooperativeAssociates")
+    public String showCooperativeAssociates(@RequestParam String coopCode){
+        String htmlBody = "<table>";
+
+        Teradata teraData = new Teradata();
+
+        List<Associate> associates = teraData.getCooperativeAssociates(coopCode);
+
+        for (Associate associate : associates) {
+            htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td></tr>";
+        }
+
+        htmlBody = htmlBody + "</table>";
+
         return htmlBody;
     }
 

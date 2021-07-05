@@ -80,6 +80,8 @@ public class Log {
                     log.warning(message);
                     break;
             }
+
+            handler.close();
             
         } catch (IOException e){
             System.out.println(e.getMessage());

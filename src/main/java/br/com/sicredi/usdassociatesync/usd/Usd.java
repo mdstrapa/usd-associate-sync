@@ -13,6 +13,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import br.com.sicredi.usdassociatesync.Configuration;
 import br.com.sicredi.usdassociatesync.Log;
 import br.com.sicredi.usdassociatesync.LogType;
+import br.com.sicredi.usdassociatesync.teradata.Associate;
 
 import com.google.gson.Gson;
 
@@ -80,8 +81,6 @@ public class Usd {
         return usdRequest;
     }
 
-    
-
     public Boolean createAssociate(UsdAssociate associate){
         Boolean result = true;
         UsdRestAccess restAccess = getAccessKey();
@@ -110,31 +109,76 @@ public class Usd {
         return result;
     }
     
+    private Connection createDBConnection(){
+
+        Connection usdDBConnection = null;
+        try{
+
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");  
+
+            String usdDBServer = config.getProperty("usdDBserver");
+            String usdDBUser = config.getProperty("usdDBUser");
+            String usdDBPassword = config.getProperty("usdDBPassword");
+    
+            String connectionUrl =
+                        "jdbc:sqlserver://" + usdDBServer + ":1433;"
+                        + "database=mdb;"
+                        + "user=" + usdDBUser + ";"
+                        + "password=" + usdDBPassword + ";"
+                        + "loginTimeout=30;";
+    
+            usdDBConnection=DriverManager.getConnection(connectionUrl); 
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+        return usdDBConnection;
+
+    }
+
+    private String buildAssociateKey(String codCooperativa, String contaCorrente, String cpf){
+        return codCooperativa + "0000" + contaCorrente + cpf + "1";
+    }
+
+    public Boolean checkIfAssociateExists(Associate associate){
+        Boolean result = false;
+
+        String codCooperativa = associate.getEntity();
+        String contaCorrente = associate.getAccount();
+        String cpf = associate.getCpfCnpj();
+
+        String associateKey = buildAssociateKey(codCooperativa,contaCorrente,cpf);
+
+        try{
+            Connection usdDBConnection = createDBConnection();
+
+            Statement sqlQuery = usdDBConnection.createStatement();  
+    
+            ResultSet rs = sqlQuery.executeQuery("select top 1 last_name from ca_contact where contact_type = 2310 and pager_email_address = '" + associateKey + "'");
+            
+            if (rs.next()) result = true;
+
+            usdDBConnection.close();  
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return result;
+    }
 
     public List<Entity> getEntities(){
         List<Entity> entities = new ArrayList<>();
         try{
+            Connection usdDBConnection = createDBConnection();
 
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");  
+            Statement sqlQuery = usdDBConnection.createStatement();  
     
-            String connectionUrl =
-                "jdbc:sqlserver://db1sql172d.des.sicredi.net:1433;"
-                        + "database=mdb;"
-                        + "user=mdbadmin;"
-                        + "password=Sicredi123;"
-                        + "loginTimeout=30;";
-    
-            Connection con=DriverManager.getConnection(connectionUrl); 
-
-            Statement stmt=con.createStatement();  
-    
-            ResultSet rs=stmt.executeQuery("select company_uuid, company_name from ca_company where inactive = 0 and company_type = 1000048 order by company_name");
+            ResultSet rs = sqlQuery.executeQuery("select company_uuid, company_name from ca_company where inactive = 0 and company_type = 1000048 order by company_name");
             
-            while(rs.next())  
-                
-                entities.add(new Entity(rs.getString(1),rs.getString(2)));
+            while(rs.next()) entities.add(new Entity(rs.getString(1),rs.getString(2)));
 
-            con.close();  
+            usdDBConnection.close();  
 
         }catch (Exception e){
             e.printStackTrace();
