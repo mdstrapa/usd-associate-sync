@@ -8,14 +8,16 @@ public class Associate {
     String cpfCnpj;
     String account;
     String entity;
+    String ua;
 
 
-    public Associate(String fullName, String bornDate, String cpfCnpj, String account, String entity){
+    public Associate(String fullName, String bornDate, String cpfCnpj, String account, String entity, String ua){
         this.fullName = fullName;
         this.bornDate = bornDate;
         this.cpfCnpj = cpfCnpj;
         this.account = account;
         this.entity = entity;
+        this.ua = ua;
     }
 
     public String getFullName(){
@@ -23,7 +25,11 @@ public class Associate {
     }
 
     public String getBorndate(){
-        return this.bornDate;
+        String dateConverted = this.bornDate.substring(0,10);
+
+        String[] dateElements = dateConverted.split("-");
+
+        return dateElements[2] + "-" + dateElements[1] + "-" + dateElements[0];
     }
 
     public String getCpfCnpj(){
@@ -36,6 +42,10 @@ public class Associate {
 
     public String getEntity(){
         return this.entity;
+    }
+
+    public String getUa(){
+        return this.ua;
     }
 
 }

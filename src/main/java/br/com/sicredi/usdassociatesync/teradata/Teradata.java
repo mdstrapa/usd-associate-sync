@@ -37,8 +37,8 @@ public class Teradata {
      public List<Associate> getNewAssociates(String thresholdDate){
         List<Associate> associates = new ArrayList<>();
 
-        associates.add(new Associate("Rafaela","1993-01-16","5464523434","35335-2","011608"));
-        associates.add(new Associate("Marcos","1984-03-31","2342342","2333-2","011608"));
+        associates.add(new Associate("Rafaela","1993-01-16","5464523434","35335-2","0116","08"));
+        associates.add(new Associate("Marcos","1984-03-31","2342342","2333-2","0116","08"));
 
         return associates;
      }
@@ -58,17 +58,22 @@ public class Teradata {
                                              "join P_SDS_DW_OWNER_V.VW_PESSOA p on p.NUM_CPF_CNPJ = f.CPF_CNPJ " +
                                              "inner join P_SDS_DW_OWNER_V.VW_tempo t on f.OID_TEMPO_MOVIMENTO=t.OID_TEMPO " +
                                              "inner join P_SDS_DW_OWNER_V.VW_VW_ENTIDADE_FLAT e on f.OID_ENTIDADE=e.oid_entidade " +
-                                             "where  t.dat_data='2021-07-01 00:00:00' and f.COD_AG='" + coopCod +"' " +
+                                             "where  t.dat_data='2021-07-01 00:00:00' " +
+                                             //"and f.COD_AG='" + coopCod +"' " +
+                                             "and p.DAT_ASSOCIACAO = '2019-08-22 00:00:00' and f.COD_AG='AG0116' " + //test
                                              "and f.FLG_ASSOCIADO = 'S' " +
                                              "and f.FLG_FCCORRENT = 'S' " +
                                              "and p.FLG_CORRENTE = 'S'"
                                              );
          
-         while(rs.next()) associates.add(new Associate(rs.getString(5),
+         while(rs.next()) associates.add(new Associate(
+                                          rs.getString(5),
                                           rs.getString(6),
                                           rs.getString(4),
                                           rs.getString(3),
-                                          rs.getString(1) + rs.getString(2)));
+                                          rs.getString(1),
+                                          rs.getString(2))
+                                          );
    
          teraDataConnection.close();  
 

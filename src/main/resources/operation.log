@@ -1452,3 +1452,4 @@
 [2021-06-14 18:05:16] [INFO   ] {"collection_ca_cmpny":{"@COUNT":1,"@START":1,"@TOTAL_COUNT":1,"ca_cmpny":{"@id":"U'C273991BA53AB24088DF6DDFB02D3D4E'","@REL_ATTR":"U'C273991BA53AB24088DF6DDFB02D3D4E'","@COMMON_NAME":"016736 - UA SANTA TEREZA","link":{"@href":"http://usd.des.sicredi.net:8050/caisd-rest/ca_cmpny/U'C273991BA53AB24088DF6DDFB02D3D4E'","@rel":"self"}}}} 
 [2021-06-14 18:05:16] [INFO   ] {"collection_ca_cmpny":{"@COUNT":0,"@START":0,"@TOTAL_COUNT":0}} 
 [2021-06-14 18:05:17] [INFO   ] {"collection_ca_cmpny":{"@COUNT":0,"@START":0,"@TOTAL_COUNT":0}} 
+[2021-07-06 23:41:00] [INFO   ] {"rest_access":{"@id":405114,"@REL_ATTR":405114,"@COMMON_NAME":1042876636,"link":{"@href":"http://usd.des.sicredi.net:8050/caisd-rest/rest_access/405114","@rel":"self"},"access_key":1042876636,"expiration_date":1626230459}} 

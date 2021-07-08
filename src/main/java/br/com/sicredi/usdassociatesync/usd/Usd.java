@@ -81,13 +81,25 @@ public class Usd {
         return usdRequest;
     }
 
-    public Boolean createAssociate(UsdAssociate associate){
+    public Boolean createAssociate(Associate associate, UsdCompany company){
         Boolean result = true;
         UsdRestAccess restAccess = getAccessKey();
+        
+        String associateKey = buildAssociateKey(associate.getEntity(),associate.getAccount(),associate.getCpfCnpj());
 
-        String requestBody = gson.toJson(associate);
+        UsdAssociate  usdAssociate = new UsdAssociate(
+                            associate.getFullName(), 
+                            associate.getBorndate(), 
+                            associate.getCpfCnpj(), 
+                            associate.getAccount(), 
+                            company
+                );
 
-        HttpRequest request = buildUsdRequest("POST","ca_contact/", requestBody, restAccess.access_key);
+        usdAssociate.setAssociateKey(associateKey);
+
+        String requestBody = usdJsonFormatter.formatRequestBody(usdAssociate, "cnt");
+
+        //HttpRequest request = buildUsdRequest("POST","ca_contact/", requestBody, restAccess.access_key);
 
         System.out.println(requestBody);
 
@@ -116,7 +128,7 @@ public class Usd {
 
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");  
 
-            String usdDBServer = config.getProperty("usdDBserver");
+            String usdDBServer = config.getProperty("usdDBServer");
             String usdDBUser = config.getProperty("usdDBUser");
             String usdDBPassword = config.getProperty("usdDBPassword");
     
@@ -126,6 +138,8 @@ public class Usd {
                         + "user=" + usdDBUser + ";"
                         + "password=" + usdDBPassword + ";"
                         + "loginTimeout=30;";
+
+            //System.out.println(connectionUrl);
     
             usdDBConnection=DriverManager.getConnection(connectionUrl); 
         }catch (Exception ex){
@@ -137,32 +151,33 @@ public class Usd {
     }
 
     private String buildAssociateKey(String codCooperativa, String contaCorrente, String cpf){
-        return codCooperativa + "0000" + contaCorrente + cpf + "1";
+        return codCooperativa.substring(1) + "0000" + contaCorrente.replace("-", "") + cpf + "1";
     }
 
     public Boolean checkIfAssociateExists(Associate associate){
-        Boolean result = false;
+        Boolean result = true;
 
-        String codCooperativa = associate.getEntity();
-        String contaCorrente = associate.getAccount();
-        String cpf = associate.getCpfCnpj();
+        String associateKey = buildAssociateKey(associate.getEntity(),associate.getAccount(),associate.getCpfCnpj());
 
-        String associateKey = buildAssociateKey(codCooperativa,contaCorrente,cpf);
-
+        
         try{
             Connection usdDBConnection = createDBConnection();
-
-            Statement sqlQuery = usdDBConnection.createStatement();  
-    
-            ResultSet rs = sqlQuery.executeQuery("select top 1 last_name from ca_contact where contact_type = 2310 and pager_email_address = '" + associateKey + "'");
             
-            if (rs.next()) result = true;
-
+            Statement sqlQuery = usdDBConnection.createStatement();  
+            
+            ResultSet rs = sqlQuery.executeQuery("select top 1 last_name from ca_contact where contact_type = 2310 and inactive = 0 and pager_email_address = '" + associateKey + "'");
+            
+            if (!rs.next()) result = false;
+            
             usdDBConnection.close();  
-
+            
         }catch (Exception e){
             e.printStackTrace();
         }
+        
+        System.out.print("The key for " + associate.getFullName() + " is: " + associateKey);
+        if (result) System.out.println(" | Exist");
+        else System.out.println(" | Does NOT Exist");
 
         return result;
     }
