@@ -29,7 +29,7 @@ public class Associate {
 
         String[] dateElements = dateConverted.split("-");
 
-        return dateElements[2] + "-" + dateElements[1] + "-" + dateElements[0];
+        return dateElements[2] + "/" + dateElements[1] + "/" + dateElements[0];
     }
 
     public String getCpfCnpj(){

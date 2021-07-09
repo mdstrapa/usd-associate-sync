@@ -11,6 +11,7 @@ import br.com.sicredi.usdassociatesync.teradata.Associate;
 import br.com.sicredi.usdassociatesync.teradata.Teradata;
 import br.com.sicredi.usdassociatesync.usd.Entity;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,89 +20,59 @@ import java.util.List;
 public class Controller {
     
     List<Entity> usdEntities = new ArrayList<>();
+    Usd usd = new Usd();
+    Teradata teraData = new Teradata();
 
     @GetMapping("/")
     public String index(@RequestParam String thresholdDate){
-        
-        Usd usd = new Usd();
-        usdEntities = usd.getEntities();
-
-        String htmlBody = showUsdEntities(usdEntities);
-
-        // Teradata teradata = new Teradata();
-        // List<Associate> associatesToCreate = teradata.getNewAssociates(thresholdDate);
-
-        // for (Associate associate : associatesToCreate) {
-                        
-        //     if(!usd.checkIfAssociateExists(associate)){
-
-        //         Entity entity = getEntity(usdEntities, associate.getEntity());
-
-        //         UsdAssociate usdAssociate = new UsdAssociate(associate.getFullName(), 
-        //                     associate.getBorndate(), 
-        //                     associate.getCpfCnpj(), 
-        //                     associate.getAccount(), 
-        //                     entity);
-                
-        //         usdAssociate.save();
-        //     }
-        // }
-    
-        return htmlBody;
+        return "This API syncs associates between TeraData and USD";
     }
 
-
     private Entity getEntity(List<Entity> entities, String entityCode){
-        for(Entity entity : entities){
-            //System.out.println("codigo na lista: '" + entity.getCode() + "'");
-            //System.out.println("codigo procurado: '" + entityCode + "'");
-            
+        for(Entity entity : entities){     
             if (entity.getCode().equals(entityCode)){
-                System.out.println("ACHOU");
                 return entity;
             }
         }
         return null;
     }
 
-    private String showUsdEntities(List<Entity> entities) {
-        String htmlBody = "<table>";
-        for (Entity entity : entities) {
-            htmlBody = htmlBody 
-            + "<tr><td>" + entity.getUsdId() + "</td>"
-            + "<td>" + entity.getCode() + "</td>"
-            + "<td>" + entity.getName() + "</td></tr>";
-        }
-        htmlBody = htmlBody + "</table>";
-        return htmlBody;
-    }
+    // private String showUsdEntities(List<Entity> entities) {
+    //     String htmlBody = "<table>";
+    //     for (Entity entity : entities) {
+    //         htmlBody = htmlBody 
+    //         + "<tr><td>" + entity.getUsdId() + "</td>"
+    //         + "<td>" + entity.getCode() + "</td>"
+    //         + "<td>" + entity.getName() + "</td></tr>";
+    //     }
+    //     htmlBody = htmlBody + "</table>";
+    //     return htmlBody;
+    // }
 
-    @GetMapping("showCooperativeAssociates")
-    public String showCooperativeAssociates(@RequestParam String coopCode){
+    @GetMapping("syncCooperativeAssociates")
+    public String syncCooperativeAssociates(@RequestParam String coopCode){
+
+        Timestamp startTimestamp = new Timestamp(System.currentTimeMillis());
+
         String htmlBody = "<table>";
+
+        int associateCreationCount = 0;
         
-        Usd usd = new Usd();
-
         usdEntities = usd.getEntities();
 
-        Teradata teraData = new Teradata();
+        System.out.println("qtd: " + usdEntities.size());
 
         List<Associate> associates = teraData.getCooperativeAssociates(coopCode);
 
         for (Associate associate : associates) {
+
             htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
+            
             if (!usd.checkIfAssociateExists(associate)) {
                 htmlBody = htmlBody + "Will be created";
 
-                // System.out.println("Entity: " + associate.getEntity());
-                // System.out.println("UA: " + associate.getUa());
-                // System.out.println("Qtd Entities: " + usdEntities.size());
-
-                Entity entity = getEntity(usdEntities, associate.getEntity() + associate.getUa());
-
-                UsdCompany usdCompany = new UsdCompany(entity.getUsdId());
-
-                usd.createAssociate(associate,usdCompany);
+                createAssociate(associate);
+                associateCreationCount++;
 
             }
             htmlBody = htmlBody + "</td></tr>";
@@ -109,21 +80,42 @@ public class Controller {
 
         htmlBody = htmlBody + "</table>";
 
+
+        Timestamp finishTimestamp = new Timestamp(System.currentTimeMillis());
+        htmlBody = "Begining: " + startTimestamp.toString() + "<br>Finish: " + finishTimestamp.toString() + "<br>Qtd Associates: " + associates.size() + "  Qtd created: " + associateCreationCount + "<br>" + htmlBody; 
         return htmlBody;
     }
 
-    @GetMapping("/test")
-    public String test(){
+    @GetMapping("syncNewAssociates")
+    public String syncNewAssociates(@RequestParam String thresholdDate){
         String htmlBody = "";
+        usdEntities = usd.getEntities();
 
-        Usd usd = new Usd();
+        List<Associate> associatesToCreate = teraData.getNewAssociates(thresholdDate);
 
-        usd.checkIfAssociateExists(new Associate("Rafaela","1993-01-16","5464523434","35335-2","0116","08"));
+        for (Associate associate : associatesToCreate) {
 
+            htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
+                        
+            if(!usd.checkIfAssociateExists(associate)){
+
+                htmlBody = htmlBody + "Will be created";
+
+                createAssociate(associate);
+            }
+            htmlBody = htmlBody + "</td></tr>";
+        }
 
         return htmlBody;
-
     }
 
+
+    private void createAssociate(Associate associate) {
+        Entity entity = getEntity(usdEntities, associate.getEntity() + associate.getUa());
+
+        UsdCompany usdCompany = new UsdCompany(entity.getUsdId());
+
+        usd.createAssociate(associate,usdCompany);
+    }
 
 }

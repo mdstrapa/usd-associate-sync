@@ -58,9 +58,10 @@ public class Teradata {
                                              "join P_SDS_DW_OWNER_V.VW_PESSOA p on p.NUM_CPF_CNPJ = f.CPF_CNPJ " +
                                              "inner join P_SDS_DW_OWNER_V.VW_tempo t on f.OID_TEMPO_MOVIMENTO=t.OID_TEMPO " +
                                              "inner join P_SDS_DW_OWNER_V.VW_VW_ENTIDADE_FLAT e on f.OID_ENTIDADE=e.oid_entidade " +
-                                             "where  t.dat_data='2021-07-01 00:00:00' " +
-                                             //"and f.COD_AG='" + coopCod +"' " +
-                                             "and p.DAT_ASSOCIACAO = '2019-08-22 00:00:00' and f.COD_AG='AG0116' " + //test
+                                             "where  t.dat_data='2021-07-07 00:00:00' " +
+                                             "and f.COD_AG='" + coopCod + "' " +
+                                             //"and p.DAT_ASSOCIACAO = '2019-08-22 00:00:00' and f.COD_AG='AG0116' " + //test
+                                             //"and f.CPF_CNPJ = '64089835020' " + // teste
                                              "and f.FLG_ASSOCIADO = 'S' " +
                                              "and f.FLG_FCCORRENT = 'S' " +
                                              "and p.FLG_CORRENTE = 'S'"

@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 public class Usd {
 
     private static HttpClient httpClient = HttpClient.newHttpClient();
-    private Gson gson = new Gson();
     private Configuration config = new Configuration();
     private Log log = new Log();
     private UsdJsonFormatter usdJsonFormatter = new UsdJsonFormatter();
@@ -74,8 +73,10 @@ public class Usd {
                 .method(method, BodyPublishers.ofString(requestBody))
                 .setHeader("Accept", "application/json")
                 .setHeader("Content-Type", "application/json")
-                .setHeader("X-AccessKey",String.valueOf(accessKey))
+                .setHeader("X-AccessKey","435608289")
                 .build();
+
+                //.setHeader("X-AccessKey",String.valueOf(accessKey))
         }
 
         return usdRequest;
@@ -97,27 +98,24 @@ public class Usd {
 
         usdAssociate.setAssociateKey(associateKey);
 
-        String requestBody = usdJsonFormatter.formatRequestBody(usdAssociate, "cnt");
+        String requestBody = usdJsonFormatter.formatRequestBodyForCreation(usdAssociate, "cnt");
 
-        //HttpRequest request = buildUsdRequest("POST","ca_contact/", requestBody, restAccess.access_key);
+        if (config.isDebugMode()) log.addLogLine(LogType.INFO, requestBody);
 
-        System.out.println(requestBody);
+        HttpRequest request = buildUsdRequest("POST","cnt", requestBody, restAccess.access_key);
 
-
-        // try {            
+        try {            
             
-        //     HttpResponse<String> httpResponse = httpClient.send(request, BodyHandlers.ofString());
+            HttpResponse<String> httpResponse = httpClient.send(request, BodyHandlers.ofString());
 
-        //     if (config.isDebugMode()) log.addLogLine(LogType.INFO, httpResponse.body());
+            if (config.isDebugMode()) log.addLogLine(LogType.INFO, httpResponse.body());
 
-        //     if (httpResponse.statusCode()==2021) result = true;
+            if (httpResponse.statusCode()==201) result = true;
 
-
-
-        // } catch (IOException | InterruptedException e) {
-        //     System.out.println("An error has occurred: " + e.getMessage());
-        //     e.printStackTrace();
-        // }
+        } catch (IOException | InterruptedException e) {
+            System.out.println("An error has occurred: " + e.getMessage());
+            e.printStackTrace();
+        }
         return result;
     }
     
@@ -175,9 +173,15 @@ public class Usd {
             e.printStackTrace();
         }
         
-        System.out.print("The key for " + associate.getFullName() + " is: " + associateKey);
-        if (result) System.out.println(" | Exist");
-        else System.out.println(" | Does NOT Exist");
+
+        if (config.isDebugMode()) {
+            String action = "";
+
+            if (result) action = "Exist - WILL NOT be created";
+            else action = "Does NOT Exist - WILL BE created";
+
+            log.addLogLine(LogType.INFO, ("The key for " + associate.getFullName() + " is: " + associateKey + " | " + action));
+        }
 
         return result;
     }
@@ -189,7 +193,7 @@ public class Usd {
 
             Statement sqlQuery = usdDBConnection.createStatement();  
     
-            ResultSet rs = sqlQuery.executeQuery("select company_uuid, company_name from ca_company where inactive = 0 and company_type = 1000048 order by company_name");
+            ResultSet rs = sqlQuery.executeQuery("select company_uuid, company_name from ca_company where inactive = 0 and company_type = 1000058 order by company_name");
             
             while(rs.next()) entities.add(new Entity(rs.getString(1),rs.getString(2)));
 

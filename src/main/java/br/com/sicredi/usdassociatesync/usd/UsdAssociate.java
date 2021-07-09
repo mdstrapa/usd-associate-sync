@@ -4,9 +4,9 @@ package br.com.sicredi.usdassociatesync.usd;
 
 public class UsdAssociate {
     String last_name;
-    String zDataNascimento;
-    String zCpf;
-    String zContaCorrente;
+    String zdata_nascimento;
+    String zcpf;
+    String znumero_conta;
     String pemail_address;
     UsdCompany company;
     UsdContactType type;
@@ -14,9 +14,9 @@ public class UsdAssociate {
 
     public UsdAssociate(String last_name, String zDataNascimento, String zCpf, String zContaCorrente, UsdCompany company){
         this.last_name = last_name;
-        this.zDataNascimento = zDataNascimento;
-        this.zCpf = zCpf;
-        this.zContaCorrente = zContaCorrente;
+        this.zdata_nascimento = zDataNascimento;
+        this.zcpf = zCpf;
+        this.znumero_conta = zContaCorrente;
         this.pemail_address = zCpf + zContaCorrente;
         this.company = company;
         this.type = new UsdContactType();
