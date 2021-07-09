@@ -11,6 +11,7 @@ import br.com.sicredi.usdassociatesync.teradata.Associate;
 import br.com.sicredi.usdassociatesync.teradata.Teradata;
 import br.com.sicredi.usdassociatesync.usd.Entity;
 
+import java.sql.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class Controller {
     
     List<Entity> usdEntities = new ArrayList<>();
     Usd usd = new Usd();
+    
     Teradata teraData = new Teradata();
 
     @GetMapping("/")
@@ -59,23 +61,29 @@ public class Controller {
         int associateCreationCount = 0;
         
         usdEntities = usd.getEntities();
+        Connection usdDBConnection = usd.createDBConnection();
 
         System.out.println("qtd: " + usdEntities.size());
 
         List<Associate> associates = teraData.getCooperativeAssociates(coopCode);
 
-        for (Associate associate : associates) {
-
-            htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
-            
-            if (!usd.checkIfAssociateExists(associate)) {
-                htmlBody = htmlBody + "Will be created";
-
-                createAssociate(associate);
-                associateCreationCount++;
-
+        try{
+            for (Associate associate : associates) {
+    
+                htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
+                
+                if (!usd.checkIfAssociateExists(associate,usdDBConnection)) {
+                    htmlBody = htmlBody + "Will be created";
+    
+                    createAssociate(associate);
+                    associateCreationCount++;
+    
+                }
+                htmlBody = htmlBody + "</td></tr>";
             }
-            htmlBody = htmlBody + "</td></tr>";
+            usdDBConnection.close();
+        }catch(SQLException e) {
+            e.printStackTrace();
         }
 
         htmlBody = htmlBody + "</table>";
@@ -90,20 +98,28 @@ public class Controller {
     public String syncNewAssociates(@RequestParam String thresholdDate){
         String htmlBody = "";
         usdEntities = usd.getEntities();
+        Connection usdDBConnection = usd.createDBConnection();
 
         List<Associate> associatesToCreate = teraData.getNewAssociates(thresholdDate);
 
-        for (Associate associate : associatesToCreate) {
+        try{
 
-            htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
-                        
-            if(!usd.checkIfAssociateExists(associate)){
-
-                htmlBody = htmlBody + "Will be created";
-
-                createAssociate(associate);
+            for (Associate associate : associatesToCreate) {
+    
+                htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
+                            
+                if(!usd.checkIfAssociateExists(associate,usdDBConnection)){
+    
+                    htmlBody = htmlBody + "Will be created";
+    
+                    createAssociate(associate);
+                }
+                htmlBody = htmlBody + "</td></tr>";
             }
-            htmlBody = htmlBody + "</td></tr>";
+    
+            usdDBConnection.close();
+        }catch(SQLException e){
+            e.printStackTrace();
         }
 
         return htmlBody;

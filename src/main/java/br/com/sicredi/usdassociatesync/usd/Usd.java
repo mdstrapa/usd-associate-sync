@@ -108,7 +108,8 @@ public class Usd {
             
             HttpResponse<String> httpResponse = httpClient.send(request, BodyHandlers.ofString());
 
-            if (config.isDebugMode()) log.addLogLine(LogType.INFO, httpResponse.body());
+            //if (config.isDebugMode()) log.addLogLine(LogType.INFO, httpResponse.body());
+            log.addLogLine(LogType.INFO, httpResponse.body());
 
             if (httpResponse.statusCode()==201) result = true;
 
@@ -119,7 +120,7 @@ public class Usd {
         return result;
     }
     
-    private Connection createDBConnection(){
+    public Connection createDBConnection(){
 
         Connection usdDBConnection = null;
         try{
@@ -149,17 +150,20 @@ public class Usd {
     }
 
     private String buildAssociateKey(String codCooperativa, String contaCorrente, String cpf){
-        return codCooperativa.substring(1) + "0000" + contaCorrente.replace("-", "") + cpf + "1";
+        String codCooperativaConvertido = "";
+        if (codCooperativa.substring(0, 1).equals("0")) codCooperativaConvertido = codCooperativa.substring(1);
+        else codCooperativaConvertido = codCooperativa;
+        return codCooperativaConvertido + "0000" + contaCorrente.replace("-", "") + cpf + "1";
     }
 
-    public Boolean checkIfAssociateExists(Associate associate){
+    public Boolean checkIfAssociateExists(Associate associate, Connection usdDBConnection){
         Boolean result = true;
 
         String associateKey = buildAssociateKey(associate.getEntity(),associate.getAccount(),associate.getCpfCnpj());
 
         
         try{
-            Connection usdDBConnection = createDBConnection();
+            //Connection usdDBConnection = createDBConnection();
             
             Statement sqlQuery = usdDBConnection.createStatement();  
             
@@ -167,7 +171,7 @@ public class Usd {
             
             if (!rs.next()) result = false;
             
-            usdDBConnection.close();  
+            //usdDBConnection.close();  
             
         }catch (Exception e){
             e.printStackTrace();
