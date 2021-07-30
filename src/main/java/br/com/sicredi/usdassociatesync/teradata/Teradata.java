@@ -37,8 +37,37 @@ public class Teradata {
      public List<Associate> getNewAssociates(String thresholdDate){
         List<Associate> associates = new ArrayList<>();
 
-        associates.add(new Associate("Rafaela","1993-01-16","5464523434","35335-2","0116","08"));
-        associates.add(new Associate("Marcos","1984-03-31","2342342","2333-2","0116","08"));
+        try{
+         Connection teraDataConnection = createDBConnection();
+   
+         Statement sqlQuery = teraDataConnection.createStatement();  
+   
+         ResultSet rs = sqlQuery.executeQuery("select e.COOP  ,e.UA  ,f.CONTA_PRINCIPAL  ,f.CPF_CNPJ  ,p.DES_PESSOA ,p.DAT_NASCIMENTO " +
+                                             "from P_SDS_DW_OWNER_V.VW_DW_F_ASSOCIADO_DIA f " +
+                                             "join P_SDS_DW_OWNER_V.VW_PESSOA p on p.NUM_CPF_CNPJ = f.CPF_CNPJ " +
+                                             "inner join P_SDS_DW_OWNER_V.VW_tempo t on f.OID_TEMPO_MOVIMENTO=t.OID_TEMPO " +
+                                             "inner join P_SDS_DW_OWNER_V.VW_VW_ENTIDADE_FLAT e on f.OID_ENTIDADE=e.oid_entidade " +
+                                             "where  t.dat_data='" + thresholdDate + " 00:00:00' " +                                             
+                                             "and p.DAT_ASSOCIACAO = '" + thresholdDate + " 00:00:00'  " + 
+                                             "and f.FLG_ASSOCIADO = 'S' " +
+                                             "and f.FLG_FCCORRENT = 'S' " +
+                                             "and p.FLG_CORRENTE = 'S'"
+                                             );
+         
+         while(rs.next()) associates.add(new Associate(
+                                          rs.getString(5),
+                                          rs.getString(6),
+                                          rs.getString(4),
+                                          rs.getString(3),
+                                          rs.getString(1),
+                                          rs.getString(2))
+                                          );
+   
+         teraDataConnection.close();  
+
+      }catch(Exception e){
+         e.printStackTrace();
+      }
 
         return associates;
      }
@@ -81,8 +110,6 @@ public class Teradata {
       }catch(Exception e){
          e.printStackTrace();
       }
-
-      //associates.add(new Associate("Rafaela","1993-01-16","5464523434","35335-2","011608"));
    
       return associates;
 

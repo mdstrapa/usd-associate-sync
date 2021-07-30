@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.sicredi.usdassociatesync.usd.Usd;
 import br.com.sicredi.usdassociatesync.usd.UsdAssociate;
 import br.com.sicredi.usdassociatesync.usd.UsdCompany;
+import jdk.jshell.spi.ExecutionControl.ExecutionControlException;
 import br.com.sicredi.usdassociatesync.teradata.Associate;
 import br.com.sicredi.usdassociatesync.teradata.Teradata;
 import br.com.sicredi.usdassociatesync.usd.Entity;
@@ -15,6 +16,7 @@ import java.sql.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 @RestController
@@ -39,17 +41,6 @@ public class Controller {
         return null;
     }
 
-    // private String showUsdEntities(List<Entity> entities) {
-    //     String htmlBody = "<table>";
-    //     for (Entity entity : entities) {
-    //         htmlBody = htmlBody 
-    //         + "<tr><td>" + entity.getUsdId() + "</td>"
-    //         + "<td>" + entity.getCode() + "</td>"
-    //         + "<td>" + entity.getName() + "</td></tr>";
-    //     }
-    //     htmlBody = htmlBody + "</table>";
-    //     return htmlBody;
-    // }
 
     @GetMapping("syncCooperativeAssociates")
     public String syncCooperativeAssociates(@RequestParam String coopCode){
@@ -96,9 +87,18 @@ public class Controller {
 
     @GetMapping("syncNewAssociates")
     public String syncNewAssociates(@RequestParam String thresholdDate){
-        String htmlBody = "";
+        String htmlBody = "<table>";
         usdEntities = usd.getEntities();
         Connection usdDBConnection = usd.createDBConnection();
+
+        int associateCreationCount = 0;
+
+
+        Timestamp startTimestamp = new Timestamp(System.currentTimeMillis());
+
+
+        System.out.println("Process Begins---------------------");
+        System.out.println("qtd: " + usdEntities.size());
 
         List<Associate> associatesToCreate = teraData.getNewAssociates(thresholdDate);
 
@@ -113,6 +113,8 @@ public class Controller {
                     htmlBody = htmlBody + "Will be created";
     
                     createAssociate(associate);
+
+                    associateCreationCount++;
                 }
                 htmlBody = htmlBody + "</td></tr>";
             }
@@ -122,6 +124,13 @@ public class Controller {
             e.printStackTrace();
         }
 
+        htmlBody = htmlBody + "</table>";
+
+        Timestamp finishTimestamp = new Timestamp(System.currentTimeMillis());
+        htmlBody = "Begining: " + startTimestamp.toString() + "<br>Finish: " + finishTimestamp.toString() + "<br>Qtd Associates: " + associatesToCreate.size() + "  Qtd created: " + associateCreationCount + "<br>" + htmlBody; 
+
+        System.out.println("Process Ends---------------------");
+
         return htmlBody;
     }
 
@@ -129,9 +138,17 @@ public class Controller {
     private void createAssociate(Associate associate) {
         Entity entity = getEntity(usdEntities, associate.getEntity() + associate.getUa());
 
-        UsdCompany usdCompany = new UsdCompany(entity.getUsdId());
+        try{
 
-        usd.createAssociate(associate,usdCompany);
+            if (!Objects.isNull(entity)){
+
+                UsdCompany usdCompany = new UsdCompany(entity.getUsdId());
+                usd.createAssociate(associate,usdCompany);
+            }
+        }catch (Exception ex){
+
+            System.out.println("the missing entity is: " + associate.getEntity() + associate.getUa());
+        }
     }
 
 }

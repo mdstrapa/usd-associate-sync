@@ -73,10 +73,12 @@ public class Usd {
                 .method(method, BodyPublishers.ofString(requestBody))
                 .setHeader("Accept", "application/json")
                 .setHeader("Content-Type", "application/json")
-                .setHeader("X-AccessKey","435608289")
+                .setHeader("X-AccessKey","172601632")
                 .build();
 
                 //.setHeader("X-AccessKey",String.valueOf(accessKey))
+                //.setHeader("Authorization", "Basic bWFyY29zX3N0cmFwYXpvbjpFVUEyMDIxZWhub2lz")
+                //.setHeader("X-AccessKey","435608289") --PROD
         }
 
         return usdRequest;
