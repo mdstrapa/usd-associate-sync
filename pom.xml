@@ -45,6 +45,11 @@
 			<artifactId>terajdbc4</artifactId>
 			<version>17.10.00.12</version>
 		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.20</version>
+		</dependency>
 	</dependencies>
 
 	<build>

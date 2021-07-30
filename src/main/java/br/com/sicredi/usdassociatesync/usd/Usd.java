@@ -11,17 +11,16 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import br.com.sicredi.usdassociatesync.Configuration;
-import br.com.sicredi.usdassociatesync.Log;
-import br.com.sicredi.usdassociatesync.LogType;
 import br.com.sicredi.usdassociatesync.teradata.Associate;
+import lombok.extern.slf4j.Slf4j;
 
 import com.google.gson.Gson;
 
+@Slf4j
 public class Usd {
 
     private static HttpClient httpClient = HttpClient.newHttpClient();
     private Configuration config = new Configuration();
-    private Log log = new Log();
     private UsdJsonFormatter usdJsonFormatter = new UsdJsonFormatter();
 
     private UsdRestAccess getAccessKey(){
@@ -36,14 +35,15 @@ public class Usd {
     
             try {
                 HttpResponse<String> httpResponse = httpClient.send(request, BodyHandlers.ofString());
-                if (config.isDebugMode()) log.addLogLine(LogType.INFO, httpResponse.body());
+                if (log.isDebugEnabled()) log.info(httpResponse.body());
                 responseBody = usdJsonFormatter.formatObjectResponse(httpResponse.body(),"rest_access");
-                System.out.println(responseBody);
+
                 usdRestAccess = new Gson().fromJson(responseBody, UsdRestAccess.class);
 
                 usdRestAccess.registerNewAccessKey(String.valueOf(usdRestAccess.access_key) , String.valueOf(usdRestAccess.expiration_date));
     
             } catch (IOException | InterruptedException e) {
+                log.error(e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -73,7 +73,7 @@ public class Usd {
                 .method(method, BodyPublishers.ofString(requestBody))
                 .setHeader("Accept", "application/json")
                 .setHeader("Content-Type", "application/json")
-                .setHeader("X-AccessKey","172601632")
+                .setHeader("X-AccessKey","1784302696")
                 .build();
 
                 //.setHeader("X-AccessKey",String.valueOf(accessKey))
@@ -102,7 +102,7 @@ public class Usd {
 
         String requestBody = usdJsonFormatter.formatRequestBodyForCreation(usdAssociate, "cnt");
 
-        if (config.isDebugMode()) log.addLogLine(LogType.INFO, requestBody);
+        if (log.isDebugEnabled()) log.info(requestBody);
 
         HttpRequest request = buildUsdRequest("POST","cnt", requestBody, restAccess.access_key);
 
@@ -111,12 +111,12 @@ public class Usd {
             HttpResponse<String> httpResponse = httpClient.send(request, BodyHandlers.ofString());
 
             //if (config.isDebugMode()) log.addLogLine(LogType.INFO, httpResponse.body());
-            log.addLogLine(LogType.INFO, httpResponse.body());
+            log.info(httpResponse.body());
 
             if (httpResponse.statusCode()==201) result = true;
 
         } catch (IOException | InterruptedException e) {
-            System.out.println("An error has occurred: " + e.getMessage());
+            log.error(e.getMessage());
             e.printStackTrace();
         }
         return result;
@@ -143,8 +143,9 @@ public class Usd {
             //System.out.println(connectionUrl);
     
             usdDBConnection=DriverManager.getConnection(connectionUrl); 
-        }catch (Exception ex){
-            ex.printStackTrace();
+        }catch (Exception e){
+            log.error(e.getMessage());
+            e.printStackTrace();
         }
 
         return usdDBConnection;
@@ -176,17 +177,18 @@ public class Usd {
             //usdDBConnection.close();  
             
         }catch (Exception e){
+            log.error(e.getMessage());
             e.printStackTrace();
         }
         
 
-        if (config.isDebugMode()) {
+        if (log.isDebugEnabled()) {
             String action = "";
 
             if (result) action = "Exist - WILL NOT be created";
             else action = "Does NOT Exist - WILL BE created";
 
-            log.addLogLine(LogType.INFO, ("The key for " + associate.getFullName() + " is: " + associateKey + " | " + action));
+            log.info(("The key for " + associate.getFullName() + " is: " + associateKey + " | " + action));
         }
 
         return result;
@@ -206,6 +208,7 @@ public class Usd {
             usdDBConnection.close();  
 
         }catch (Exception e){
+            log.error(e.getMessage());
             e.printStackTrace();
         }
 

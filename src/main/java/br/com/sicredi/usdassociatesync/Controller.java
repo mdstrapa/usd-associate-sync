@@ -11,6 +11,7 @@ import jdk.jshell.spi.ExecutionControl.ExecutionControlException;
 import br.com.sicredi.usdassociatesync.teradata.Associate;
 import br.com.sicredi.usdassociatesync.teradata.Teradata;
 import br.com.sicredi.usdassociatesync.usd.Entity;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.sql.Timestamp;
@@ -20,6 +21,7 @@ import java.util.Objects;
 
 
 @RestController
+@Slf4j
 public class Controller {
     
     List<Entity> usdEntities = new ArrayList<>();
@@ -28,7 +30,8 @@ public class Controller {
     Teradata teraData = new Teradata();
 
     @GetMapping("/")
-    public String index(@RequestParam String thresholdDate){
+    public String index(){
+        log.info("This API is up.");
         return "This API syncs associates between TeraData and USD";
     }
 
@@ -44,92 +47,26 @@ public class Controller {
 
     @GetMapping("syncCooperativeAssociates")
     public String syncCooperativeAssociates(@RequestParam String coopCode){
-
-        Timestamp startTimestamp = new Timestamp(System.currentTimeMillis());
-
-        String htmlBody = "<table>";
-
-        int associateCreationCount = 0;
-        
-        usdEntities = usd.getEntities();
-        Connection usdDBConnection = usd.createDBConnection();
-
-        System.out.println("qtd: " + usdEntities.size());
+        log.info("Process Begins ---------------------------");
 
         List<Associate> associates = teraData.getCooperativeAssociates(coopCode);
 
-        try{
-            for (Associate associate : associates) {
-    
-                htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
-                
-                if (!usd.checkIfAssociateExists(associate,usdDBConnection)) {
-                    htmlBody = htmlBody + "Will be created";
-    
-                    createAssociate(associate);
-                    associateCreationCount++;
-    
-                }
-                htmlBody = htmlBody + "</td></tr>";
-            }
-            usdDBConnection.close();
-        }catch(SQLException e) {
-            e.printStackTrace();
-        }
+        String htmlBody = syncAssociates(associates);
 
-        htmlBody = htmlBody + "</table>";
+        log.info("Process Ends ---------------------------");
 
-
-        Timestamp finishTimestamp = new Timestamp(System.currentTimeMillis());
-        htmlBody = "Begining: " + startTimestamp.toString() + "<br>Finish: " + finishTimestamp.toString() + "<br>Qtd Associates: " + associates.size() + "  Qtd created: " + associateCreationCount + "<br>" + htmlBody; 
         return htmlBody;
     }
 
     @GetMapping("syncNewAssociates")
     public String syncNewAssociates(@RequestParam String thresholdDate){
-        String htmlBody = "<table>";
-        usdEntities = usd.getEntities();
-        Connection usdDBConnection = usd.createDBConnection();
+        log.info("Process Begins ---------------------------");
 
-        int associateCreationCount = 0;
+        List<Associate> associates = teraData.getNewAssociates(thresholdDate);
 
+        String htmlBody = syncAssociates(associates);
 
-        Timestamp startTimestamp = new Timestamp(System.currentTimeMillis());
-
-
-        System.out.println("Process Begins---------------------");
-        System.out.println("qtd: " + usdEntities.size());
-
-        List<Associate> associatesToCreate = teraData.getNewAssociates(thresholdDate);
-
-        try{
-
-            for (Associate associate : associatesToCreate) {
-    
-                htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
-                            
-                if(!usd.checkIfAssociateExists(associate,usdDBConnection)){
-    
-                    htmlBody = htmlBody + "Will be created";
-    
-                    createAssociate(associate);
-
-                    associateCreationCount++;
-                }
-                htmlBody = htmlBody + "</td></tr>";
-            }
-    
-            usdDBConnection.close();
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-
-        htmlBody = htmlBody + "</table>";
-
-        Timestamp finishTimestamp = new Timestamp(System.currentTimeMillis());
-        htmlBody = "Begining: " + startTimestamp.toString() + "<br>Finish: " + finishTimestamp.toString() + "<br>Qtd Associates: " + associatesToCreate.size() + "  Qtd created: " + associateCreationCount + "<br>" + htmlBody; 
-
-        System.out.println("Process Ends---------------------");
+        log.info("Process Ends ---------------------------");
 
         return htmlBody;
     }
@@ -149,6 +86,44 @@ public class Controller {
 
             System.out.println("the missing entity is: " + associate.getEntity() + associate.getUa());
         }
+    }
+
+    private String syncAssociates(List<Associate> associates){
+        String htmlBody = "<table>";
+
+        int associateCreationCount = 0;
+
+        usdEntities = usd.getEntities();
+        log.info("Qtd Entities: " + usdEntities.size());
+        log.info("Qtd Associates to sync: " + associates.size());
+        Connection usdDBConnection = usd.createDBConnection();
+
+
+        try{
+            for (Associate associate : associates) {
+
+                htmlBody = htmlBody + "<tr><td>" + associate.getFullName() + "</td><td>" + associate.getBorndate() + "</td><td>";
+
+                if (!usd.checkIfAssociateExists(associate,usdDBConnection)) {
+                    htmlBody = htmlBody + "Will be created";
+
+                    createAssociate(associate);
+                    associateCreationCount++;
+
+                }
+                htmlBody = htmlBody + "</td></tr>";
+            }
+            usdDBConnection.close();
+        }catch(SQLException e) {
+            e.printStackTrace();
+        }
+
+        htmlBody = htmlBody + "</table>";
+
+        htmlBody = "Qtd Associates: " + associates.size() + "  Qtd created: " + associateCreationCount + "<br>" + htmlBody;
+
+        return  htmlBody;
+
     }
 
 }

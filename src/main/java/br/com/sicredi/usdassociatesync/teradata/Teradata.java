@@ -2,12 +2,11 @@ package br.com.sicredi.usdassociatesync.teradata;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.io.IOException;
-
+import lombok.extern.slf4j.Slf4j;
 import br.com.sicredi.usdassociatesync.Configuration;
-
 import java.sql.*;
 
+@Slf4j
 public class Teradata {
 
    Configuration config = new Configuration();
@@ -66,6 +65,7 @@ public class Teradata {
          teraDataConnection.close();  
 
       }catch(Exception e){
+            log.error(e.getMessage());
          e.printStackTrace();
       }
 
@@ -108,6 +108,7 @@ public class Teradata {
          teraDataConnection.close();  
 
       }catch(Exception e){
+          log.error(e.getMessage());
          e.printStackTrace();
       }
    
