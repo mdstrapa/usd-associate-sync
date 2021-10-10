@@ -1,20 +1,18 @@
 package br.com.sicredi.usdassociatesync;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.sicredi.usdassociatesync.usd.Usd;
-import br.com.sicredi.usdassociatesync.usd.UsdAssociate;
 import br.com.sicredi.usdassociatesync.usd.UsdCompany;
-import jdk.jshell.spi.ExecutionControl.ExecutionControlException;
 import br.com.sicredi.usdassociatesync.teradata.Associate;
 import br.com.sicredi.usdassociatesync.teradata.Teradata;
 import br.com.sicredi.usdassociatesync.usd.Entity;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +43,7 @@ public class Controller {
     }
 
 
-    @GetMapping("syncCooperativeAssociates")
+    @PostMapping("syncCooperativeAssociates")
     public String syncCooperativeAssociates(@RequestParam String coopCode){
         log.info("Process Begins ---------------------------");
 
@@ -58,7 +56,7 @@ public class Controller {
         return htmlBody;
     }
 
-    @GetMapping("syncNewAssociates")
+    @PostMapping("syncNewAssociates")
     public String syncNewAssociates(@RequestParam String thresholdDate){
         log.info("Process Begins ---------------------------");
 
